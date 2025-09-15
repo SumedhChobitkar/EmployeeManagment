@@ -1,6 +1,7 @@
 package com.Zomato.Controller;
 
 import com.Zomato.Entity.Employee;
+import com.Zomato.Exceptions.EmployeeDeleteException;
 import com.Zomato.Exceptions.EmployeeNotFoundException;
 import com.Zomato.Exceptions.InvalideDataException;
 import com.Zomato.Service.EmployeeService;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/Employee")
@@ -23,72 +25,75 @@ public class EmployeeController {
 
     @PostMapping("/save")
     public ResponseEntity<?> save(@RequestBody Employee employee){
-try {
-    Employee saveEmployee = employeeService.saveEmployee(employee);
-
-    return ResponseEntity.status(HttpStatus.CREATED).body(saveEmployee);
-}catch(InvalideDataException e){
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("insert name first");
-}
-catch(Exception x){
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Do not enter the id");
-
-}
-
+        try {
+            Employee emp = employeeService.saveEmployee(employee);
+            return ResponseEntity.status(HttpStatus.CREATED).body(emp);
+        }catch (Exception e){
+            l.warn(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
     @GetMapping("/getAll")
-    public List<Employee> getAllEmployee(){
-        return  employeeService.getAllEmployee();
+    public ResponseEntity<?> getAllEmployee(){
+        try {
+            List<Employee> empList=employeeService.getAllEmployee();
+            return ResponseEntity.ok(empList);
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
-    @GetMapping("/{id}")
-    public Employee getEmployeeById(@PathVariable int id){
-        Employee employee=new Employee();
-
-        return employeeService.getEmployeeById(id);
+    @GetMapping("{id}")
+    public ResponseEntity<?> getEmployeeById(@PathVariable Long id){
+        try{
+            Employee e=employeeService.getEmployeeById(id);
+            return ResponseEntity.ok(e);
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+        }
 
     }
 
     @PutMapping("/{id}")
-    public Employee updateEmploye(@PathVariable int id,@RequestBody Employee employee){
+    public Employee updateEmployee(@PathVariable Long id,@RequestBody Employee employee){
         return employeeService.updateEmployee(id,employee);
 
     }
 
     @DeleteMapping("/{id}")
-    public String deleteEmployee(@PathVariable int id){
-        employeeService.deleteEmployee(id);
-        return "employee deleted successfully";
+    public ResponseEntity<?> deleteEmployee(@PathVariable Long id){
+        try {
+            employeeService.deleteEmployee(id);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body("Employee deleted successfully with id " + id);
+        } catch (EmployeeDeleteException e) {
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+        } catch (Exception e) {
+            l.warn(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
+        }
 
     }
-//@GetMapping("/getBynameE/{name}")
-//public ResponseEntity<?> getEmployeeByName(@PathVariable String name){
-//        try{
-//      List<Employee>   employee=  employeeService.getByName(name);
-//      return ResponseEntity.ok(employee);
-//
-//        }catch(EmployeeNotFoundException e) {
-//            return new ResponseEntity<>(e.getMessage(),HttpStatus.NOT_FOUND);
-//
-//        }catch
-//        (Exception  e){
-//            return new ResponseEntity<>("Error "+e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//
+    @GetMapping("/getBynameE/{name}")
+        public ResponseEntity<?> getEmployeeByName(@PathVariable String name) {
+        try {
+            Optional<Employee> employee = employeeService.getByName(name);
+            return ResponseEntity.ok(employee);
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam String email,@RequestParam String password){
-        try{
-         String  response=employeeService.login(email, password);
-         return ResponseEntity.ok(response);
+        } catch (EmployeeNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
 
-        }catch( EmployeeNotFoundException e){
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("invalid credentials "+e.getMessage());
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("invalid credentials exception "+e.getMessage());
+        } catch
+        (Exception e) {
+            return new ResponseEntity<>("Error " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+
 
 }

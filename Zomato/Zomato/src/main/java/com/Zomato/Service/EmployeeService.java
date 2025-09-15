@@ -9,14 +9,14 @@ public interface EmployeeService {
 
     public Employee saveEmployee(Employee employee);
     public List<Employee> getAllEmployee();
-    public Employee getEmployeeById(int id);
-    public Employee updateEmployee(int id,Employee employeeDetails);
+    public Employee getEmployeeById(Long id);
+    public Employee updateEmployee(Long id,Employee employeeDetails);
 
-    public void deleteEmployee(int id);
+    public void deleteEmployee(Long id);
 
-    //public List<Employee> getByName(String name);
+    public Optional<Employee> getByName(String name);
 
-    public String login(String email,String password);
+
 
 
 
